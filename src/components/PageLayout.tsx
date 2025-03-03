@@ -43,18 +43,18 @@ export default function PageLayout({ children, title, subtitle, className = '' }
   }, []);
   
   return (
-    <div className="relative min-h-screen paper-texture">
+    <div className={`relative min-h-screen ${className}`}>
       <Header />
       
-      <main className={`container mx-auto px-5 pt-28 pb-16 ${className}`}>
+      <main className="container mx-auto px-5 pt-28 pb-16 relative">
         <div className="max-w-4xl mx-auto">
-          <h1 className="page-title text-3xl md:text-4xl font-medium mb-3 tracking-tight">{title}</h1>
+          <h1 className="page-title text-3xl md:text-4xl font-medium mb-3 tracking-tight relative z-20">{title}</h1>
           {subtitle && (
-            <p className="page-subtitle text-base md:text-lg text-neutral-600 mb-10 max-w-2xl opacity-80">
+            <p className="page-subtitle text-base md:text-lg mb-10 max-w-2xl relative z-20">
               {subtitle}
             </p>
           )}
-          <div className="page-content space-y-6">
+          <div className="page-content space-y-6 relative z-20">
             {children}
           </div>
         </div>

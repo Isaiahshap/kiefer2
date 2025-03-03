@@ -29,7 +29,7 @@ export default function Footer() {
                   key={social.name}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-neutral-500 hover:text-neutral-800 transition-colors"
+                  className="text-xs text-neutral-500 hover:text-neutral-800 transition-colors hover-underline"
                 >
                   {social.name}
                 </Link>

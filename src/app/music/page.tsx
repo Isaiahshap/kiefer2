@@ -1,248 +1,258 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { gsap } from 'gsap';
+import { usePathname } from 'next/navigation';
 import PageLayout from '@/components/PageLayout';
 
-// Sample music data
-const musicData = {
-  albums: [
-    {
-      id: 1,
-      title: "It's Ok, B U",
-      year: "2023",
-      cover: "https://images.unsplash.com/photo-1520190282873-afe1285c9a2a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=774&q=80",
-      tracks: [
-        { title: "Track 1", duration: "3:42" },
-        { title: "Track 2", duration: "4:15" },
-        { title: "Track 3", duration: "3:28" },
-        { title: "Track 4", duration: "5:01" },
-        { title: "Track 5", duration: "3:56" },
-      ],
-      links: {
-        spotify: "https://open.spotify.com",
-        apple: "https://music.apple.com",
-        bandcamp: "https://bandcamp.com",
-      }
-    },
-    {
-      id: 2,
-      title: "Between Days",
-      year: "2019",
-      cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80",
-      tracks: [
-        { title: "Track 1", duration: "4:22" },
-        { title: "Track 2", duration: "3:47" },
-        { title: "Track 3", duration: "2:59" },
-        { title: "Track 4", duration: "4:33" },
-        { title: "Track 5", duration: "3:12" },
-      ],
-      links: {
-        spotify: "https://open.spotify.com",
-        apple: "https://music.apple.com",
-        bandcamp: "https://bandcamp.com",
-      }
-    },
-    {
-      id: 3,
-      title: "Happysad",
-      year: "2018",
-      cover: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80",
-      tracks: [
-        { title: "Track 1", duration: "3:52" },
-        { title: "Track 2", duration: "4:05" },
-        { title: "Track 3", duration: "3:18" },
-        { title: "Track 4", duration: "4:41" },
-        { title: "Track 5", duration: "3:36" },
-      ],
-      links: {
-        spotify: "https://open.spotify.com",
-        apple: "https://music.apple.com",
-        bandcamp: "https://bandcamp.com",
-      }
-    },
-  ],
-  singles: [
-    {
-      id: 1,
-      title: "Single 1",
-      year: "2023",
-      cover: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80",
-      duration: "3:42",
-      links: {
-        spotify: "https://open.spotify.com",
-        apple: "https://music.apple.com",
-        bandcamp: "https://bandcamp.com",
-      }
-    },
-    {
-      id: 2,
-      title: "Single 2",
-      year: "2022",
-      cover: "https://images.unsplash.com/photo-1571330735066-03aaa9429d89?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80",
-      duration: "4:15",
-      links: {
-        spotify: "https://open.spotify.com",
-        apple: "https://music.apple.com",
-        bandcamp: "https://bandcamp.com",
-      }
-    },
-  ],
-};
+// Album data with local images
+const albums = [
+  {
+    id: 1,
+    title: "It's Ok, B U",
+    year: "2023",
+    cover: "/album1.jpeg",
+    buyLink: "https://kiefer.bandcamp.com"
+  },
+  {
+    id: 2,
+    title: "Between Days",
+    year: "2022",
+    cover: "/album2.jpeg",
+    buyLink: "https://kiefer.bandcamp.com"
+  },
+  {
+    id: 3,
+    title: "When There's Love Around",
+    year: "2021",
+    cover: "/album3.jpg",
+    buyLink: "https://kiefer.bandcamp.com"
+  },
+  {
+    id: 4,
+    title: "Bridges",
+    year: "2020",
+    cover: "/album4.jpg",
+    buyLink: "https://kiefer.bandcamp.com"
+  },
+  {
+    id: 5,
+    title: "Happysad",
+    year: "2018",
+    cover: "/album5.jpg",
+    buyLink: "https://kiefer.bandcamp.com"
+  },
+  {
+    id: 6,
+    title: "Kickinit Alone",
+    year: "2017",
+    cover: "/album6.jpg",
+    buyLink: "https://kiefer.bandcamp.com"
+  }
+];
 
 export default function MusicPage() {
-  const [activeAlbum, setActiveAlbum] = useState(musicData.albums[0].id);
-  
-  // Get the current active album
-  const selectedAlbum = musicData.albums.find(album => album.id === activeAlbum);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const pathname = usePathname();
+
+  // Reset loaded state when component mounts or pathname changes
+  useEffect(() => {
+    // Ensure we're starting fresh on each navigation
+    setIsLoaded(false);
+    
+    // Use a small timeout to ensure DOM is ready
+    const timer = setTimeout(() => {
+      setIsLoaded(true);
+      
+      // Animate albums in with a stagger effect
+      if (contentRef.current) {
+        gsap.from(contentRef.current, {
+          opacity: 0,
+          y: 10,
+          duration: 0.8,
+          ease: 'power2.out',
+        });
+        
+        gsap.from('.album-item', {
+          opacity: 0,
+          y: 15,
+          stagger: 0.08,
+          duration: 0.7,
+          delay: 0.3,
+          ease: 'power1.out',
+        });
+      }
+      
+      // Make sure to scroll to top on page load
+      window.scrollTo(0, 0);
+    }, 50);
+    
+    return () => clearTimeout(timer);
+  }, [pathname]);
   
   return (
     <PageLayout 
       title="Music"
-      subtitle="Explore Kiefer's discography, including albums, singles, and featured tracks."
+      subtitle="Explore Kiefer's discography of albums from across his career."
+      className="music-page"
     >
-      {/* Album section */}
-      <div className="mb-16">
-        <h2 className="text-2xl font-semibold mb-8">Albums</h2>
+      {/* Custom background style for this page */}
+      <style jsx global>{`
+        /* Override any unwanted styles */
+        .music-page {
+          background-color: #eae7e0;
+        }
         
-        <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-8">
-          {/* Album covers */}
-          <div className="grid grid-cols-3 md:grid-cols-1 gap-4">
-            {musicData.albums.map(album => (
-              <button
-                key={album.id}
-                onClick={() => setActiveAlbum(album.id)}
-                className={`relative overflow-hidden rounded-md transition-transform ${
-                  activeAlbum === album.id ? 'ring-2 ring-neutral-900 scale-[1.02]' : 'opacity-70 hover:opacity-100'
-                }`}
-              >
-                <div className="relative aspect-square">
-                  <Image 
-                    src={album.cover} 
-                    alt={album.title}
-                    fill
-                    style={{ objectFit: 'cover' }}
-                  />
+        /* Fix z-index to ensure header navigation works */
+        header {
+          position: fixed;
+          z-index: 100;
+          pointer-events: auto;
+        }
+        
+        /* Ensure all links in header are clickable */
+        header a, 
+        header button,
+        .nav-item {
+          pointer-events: auto !important;
+          position: relative;
+          z-index: 101;
+        }
+        
+        /* Ensure no overlay interferes with content */
+        .paper-texture::before,
+        .vintage-texture::before {
+          opacity: 0.03;
+          z-index: -1;
+          pointer-events: none;
+        }
+        
+        /* Make content fully opaque */
+        .page-title, 
+        .page-subtitle, 
+        .page-content,
+        .page-content p {
+          color: #1a1a18 !important;
+          opacity: 1 !important;
+        }
+        
+        /* Album hover effects */
+        .album-item {
+          transition: all 0.3s ease;
+        }
+        
+        .album-item:hover {
+          transform: translateY(-10px);
+        }
+        
+        .album-item .buy-now {
+          transition: all 0.2s ease;
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        
+        .album-item:hover .buy-now {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        
+        .album-item .album-overlay {
+          transition: all 0.3s ease;
+          opacity: 0;
+        }
+        
+        .album-item:hover .album-overlay {
+          opacity: 1;
+        }
+      `}</style>
+      
+      {/* Show loading indicator if not loaded */}
+      {!isLoaded && (
+        <div className="flex justify-center items-center py-20">
+          <div className="animate-pulse text-stone-700">Loading...</div>
+        </div>
+      )}
+      
+      {/* Main content - show when loaded */}
+      {isLoaded && (
+        <div className="z-20 relative" ref={contentRef}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {albums.map((album) => (
+              <div key={album.id} className="album-item">
+                <div className="relative rounded-md overflow-hidden shadow-md border border-stone-300">
+                  {/* Album cover */}
+                  <div className="relative aspect-square">
+                    <Image
+                      src={album.cover}
+                      alt={album.title}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+                      className="object-cover hover:scale-105 transition-transform duration-700"
+                      priority={album.id <= 3} // Prioritize loading first 3 images
+                    />
+                    {/* Overlay with info */}
+                    <div className="album-overlay absolute inset-0 bg-black bg-opacity-60 flex flex-col justify-end p-4">
+                      <h3 className="text-white text-xl font-medium mb-1">{album.title}</h3>
+                      <p className="text-white text-opacity-80 mb-4">{album.year}</p>
+                      <Link 
+                        href={album.buyLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="buy-now bg-stone-100 text-stone-900 py-2 px-4 rounded-full font-medium text-sm inline-block text-center hover:bg-white transition-colors"
+                      >
+                        Buy Now →
+                      </Link>
+                    </div>
+                  </div>
                 </div>
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-                  <p className="text-white text-sm font-medium">{album.title}</p>
-                  <p className="text-white/70 text-xs">{album.year}</p>
+                
+                {/* Title below the image for accessibility */}
+                <div className="mt-3 text-center">
+                  <h3 className="font-medium text-stone-800">{album.title}</h3>
+                  <p className="text-stone-600 text-sm">{album.year}</p>
                 </div>
-              </button>
+              </div>
             ))}
           </div>
           
-          {/* Album details */}
-          {selectedAlbum && (
-            <div className="bg-neutral-100 p-6 rounded-md">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
-                <div>
-                  <h3 className="text-2xl font-semibold">{selectedAlbum.title}</h3>
-                  <p className="text-neutral-600">{selectedAlbum.year}</p>
-                </div>
-                
-                <div className="flex space-x-3">
-                  <Link 
-                    href={selectedAlbum.links.spotify}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-3 py-1.5 bg-neutral-900 text-neutral-100 rounded-md text-sm hover:bg-neutral-800 transition-colors"
-                  >
-                    Spotify
-                  </Link>
-                  <Link 
-                    href={selectedAlbum.links.apple}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-3 py-1.5 bg-neutral-900 text-neutral-100 rounded-md text-sm hover:bg-neutral-800 transition-colors"
-                  >
-                    Apple Music
-                  </Link>
-                  <Link 
-                    href={selectedAlbum.links.bandcamp}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-3 py-1.5 bg-neutral-900 text-neutral-100 rounded-md text-sm hover:bg-neutral-800 transition-colors"
-                  >
-                    Bandcamp
-                  </Link>
-                </div>
-              </div>
-              
-              {/* Tracklist */}
-              <ul className="space-y-3">
-                {selectedAlbum.tracks.map((track, index) => (
-                  <li key={index} className="flex justify-between p-3 bg-neutral-200 rounded-md hover:bg-neutral-300 transition-colors">
-                    <span className="font-medium">{track.title}</span>
-                    <span className="text-neutral-600">{track.duration}</span>
-                  </li>
-                ))}
-              </ul>
+          {/* Call to action */}
+          <div className="mt-16 p-8 bg-stone-100 rounded-md shadow-sm border border-stone-200 text-center">
+            <h2 className="text-2xl font-medium mb-4 text-stone-800">Listen to Kiefer's Complete Discography</h2>
+            <p className="text-stone-600 mb-6 font-space-mono max-w-2xl mx-auto">
+              Stream all of Kiefer's music on your favorite platform or purchase directly to support the artist.
+            </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Link 
+                href="https://open.spotify.com/artist/3v2Gh5cZQggKURNBXU68Yu"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-6 py-3 bg-stone-800 text-stone-100 rounded-md font-medium hover:bg-stone-700 transition-colors"
+              >
+                Spotify
+              </Link>
+              <Link 
+                href="https://music.apple.com/us/artist/kiefer/257078743"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-6 py-3 bg-stone-800 text-stone-100 rounded-md font-medium hover:bg-stone-700 transition-colors"
+              >
+                Apple Music
+              </Link>
+              <Link 
+                href="https://kiefer.bandcamp.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-6 py-3 bg-stone-800 text-stone-100 rounded-md font-medium hover:bg-stone-700 transition-colors"
+              >
+                Bandcamp
+              </Link>
             </div>
-          )}
+          </div>
         </div>
-      </div>
-      
-      {/* Singles section */}
-      <div>
-        <h2 className="text-2xl font-semibold mb-8">Singles</h2>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {musicData.singles.map(single => (
-            <div key={single.id} className="bg-neutral-100 rounded-md overflow-hidden">
-              <div className="relative aspect-square">
-                <Image 
-                  src={single.cover} 
-                  alt={single.title}
-                  fill
-                  style={{ objectFit: 'cover' }}
-                />
-              </div>
-              <div className="p-4">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="font-medium text-lg">{single.title}</h3>
-                    <p className="text-neutral-600 text-sm">{single.year} • {single.duration}</p>
-                  </div>
-                  <button className="p-2 bg-neutral-900 text-neutral-100 rounded-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
-                    </svg>
-                  </button>
-                </div>
-                
-                <div className="flex space-x-2">
-                  <Link 
-                    href={single.links.spotify}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-2 py-1 bg-neutral-200 text-neutral-800 rounded text-xs hover:bg-neutral-300 transition-colors"
-                  >
-                    Spotify
-                  </Link>
-                  <Link 
-                    href={single.links.apple}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-2 py-1 bg-neutral-200 text-neutral-800 rounded text-xs hover:bg-neutral-300 transition-colors"
-                  >
-                    Apple
-                  </Link>
-                  <Link 
-                    href={single.links.bandcamp}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-2 py-1 bg-neutral-200 text-neutral-800 rounded text-xs hover:bg-neutral-300 transition-colors"
-                  >
-                    Bandcamp
-                  </Link>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
     </PageLayout>
   );
 } 

@@ -65,7 +65,7 @@ export default function Carousel({ images }: CarouselProps) {
             className="flex-none"
             style={{ width: '280px' }}
           >
-            <div className="relative aspect-[4/3] overflow-hidden rounded">
+            <div className="relative aspect-[4/3] overflow-hidden ">
               <Image 
                 src={image.src} 
                 alt={image.alt}
@@ -79,4 +79,4 @@ export default function Carousel({ images }: CarouselProps) {
       </div>
     </div>
   );
-} 
+}

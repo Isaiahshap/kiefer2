@@ -3,19 +3,13 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { gsap } from 'gsap';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import Carousel from '@/components/Carousel';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import Carousel from '../components/Carousel';
+import MailingListSignup from '../components/MailingListSignup';
+import { useHero } from '../contexts/HeroContext';
 
-// Navigation categories for the bottom menu
-const categories = [
-  { letter: 'A', label: 'About', path: '/about' },
-  { letter: 'B', label: 'Tour', path: '/tour' },
-  { letter: 'C', label: 'Music', path: '/music' },
-  { letter: 'D', label: 'Videos', path: '/videos' },
-  { letter: 'E', label: 'Course', path: '/course' },
-  { letter: 'F', label: 'Contact', path: '/contact' },
-];
+
 
 // Define interface for the tour event data structure
 interface TourEvent {
@@ -35,7 +29,9 @@ export default function Home() {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const [tourData, setTourData] = useState<TourEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPageLoaded, setIsPageLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { showHero, setShowHero } = useHero();
 
   // Fetch tour data
   useEffect(() => {
@@ -67,23 +63,21 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    // Very subtle, slow fade-in for a nostalgic feel
-    gsap.from(titleRef.current, {
-      opacity: 0,
-      duration: 2.5,
-      ease: 'power1.inOut',
-    });
-
-    // Subtle fade for navigation items
-    gsap.from('.category-item', {
-      opacity: 0,
-      y: 10,
-      stagger: 0.08,
-      duration: 0.8,
-      delay: 1,
-      ease: 'power1.out',
-    });
+    // Mark page as loaded
+    setIsPageLoaded(true);
     
+    // Show hero on initial page load
+    setShowHero(true);
+    
+    // Very subtle, slow fade-in for a nostalgic feel
+    if (showHero && titleRef.current) {
+      gsap.from(titleRef.current, {
+        opacity: 0,
+        duration: 2.5,
+        ease: 'power1.inOut',
+      });
+    }
+
     // Add animation for tour dates
     gsap.from('.tour-item', {
       opacity: 0,
@@ -93,21 +87,65 @@ export default function Home() {
       delay: 1.2,
       ease: 'power1.out',
     });
-  }, []);
+    
+    // Set different background images for each letter
+    const images = [
+      '/album1.jpeg',
+      '/album2.jpeg',
+      '/album4.jpg',
+      '/album3.jpg',
+      '/album5.jpg',
+      '/album6.jpg',
+    ];
+    
+    // Letter hover animations
+    const letters = document.querySelectorAll('.main-title span');
+    
+    letters.forEach((letter, index) => {
+      const letterEl = letter as HTMLElement;
+      
+      // Apply background image and initial styles
+      letterEl.style.backgroundImage = `url(${images[index % images.length]})`;
+      letterEl.style.backgroundSize = 'cover';
+      letterEl.style.backgroundPosition = 'center';
+      letterEl.style.backgroundClip = 'text';
+      letterEl.style.webkitBackgroundClip = 'text';
+      letterEl.style.color = 'currentColor';
+      letterEl.style.webkitTextFillColor = 'currentColor';
+      
+      // Create hover animation for each letter
+      letterEl.addEventListener('mouseenter', () => {
+        gsap.to(letterEl, {
+          color: 'transparent',
+          webkitTextFillColor: 'transparent',
+          duration: 0.3,
+          ease: 'power2.out',
+        });
+      });
+      
+      letterEl.addEventListener('mouseleave', () => {
+        gsap.to(letterEl, {
+          color: 'currentColor',
+          webkitTextFillColor: 'currentColor',
+          duration: 0.3,
+          ease: 'power2.out',
+        });
+      });
+    });
+    
+    // Make sure to scroll to top on page load
+    window.scrollTo(0, 0);
+  }, [showHero, setShowHero]);
 
-  // Format date from API response (using the starts-at-short field)
+  // Format date from API response with Space Mono styling
   const formatDate = (dateString: string) => {
     // Parse the "Mar 19, 2025" format to get just "MAR 19"
     const parts = dateString.split(', ');
     if (parts.length === 2) {
       const datePart = parts[0].split(' ');
-      if (datePart.length === 2) {
-        const month = datePart[0].toUpperCase();
-        const day = datePart[1];
-        return `${month} ${day}`;
-      }
+      return `${datePart[0].toUpperCase()} ${datePart[1]}`;
     }
-    return dateString; // Fallback
+    return dateString;
   };
 
   // Extract location (city) from formatted address
@@ -119,142 +157,174 @@ export default function Home() {
     <div className="relative min-h-screen vintage-texture flex flex-col">
       <Header />
       
-      <main className="flex-1 flex flex-col items-center justify-between py-24 md:py-36">
-        {/* Main centered title with nostalgic styling */}
-        <div className="flex-1 flex items-center justify-center w-full min-h-[50vh]">
-          <h1 
-            ref={titleRef} 
-            className="main-title text-center transform-gpu"
-            style={{ fontSize: "clamp(8rem, 25vw, 20rem)" }}
-          >
-            kiefer
-          </h1>
-        </div>
-        
-        {/* Simple, nostalgic bottom navigation */}
-        <div className="w-full max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-y-8 gap-x-2 mt-12 px-5">
-          {categories.map((category) => (
-            <Link
-              href={category.path}
-              key={category.label}
-              className="category-item group flex flex-col items-center text-center"
-            >
-              <span className="nav-letter">{category.letter}.</span>
-              <span className="nav-category">
-                {category.label}
-              </span>
-            </Link>
-          ))}
-        </div>
-        
-        {/* Dynamic Tour Section */}
-        <div className="w-full max-w-4xl mx-auto px-5 mt-24">
-          <div className="flex justify-between items-baseline mb-8">
-            <h2 className="text-xl font-medium tracking-tight">Upcoming Tours</h2>
-            <Link href="/tour" className="text-xs uppercase tracking-wider opacity-70 hover:opacity-100 transition-opacity">
-              View All
-            </Link>
-          </div>
-          
-          {isLoading ? (
-            <div className="py-8 text-center opacity-50">
-              <p>Loading tour dates...</p>
-            </div>
-          ) : error ? (
-            <div className="py-8 text-center opacity-50">
-              <p>Unable to load tour dates at this time.</p>
-            </div>
-          ) : tourData.length > 0 ? (
-            <div className="space-y-5">
-              {tourData.map((event) => {
-                const attributes = event.attributes;
-                return (
-                  <div 
-                    key={event.id}
-                    className="tour-item flex justify-between items-center border-b border-neutral-800/10 pb-4"
-                  >
-                    <div className="flex space-x-6 items-baseline">
-                      <span className="text-sm font-mono opacity-60">
-                        {formatDate(attributes['starts-at-short'])}
-                      </span>
-                      <span className="text-lg">{extractLocation(attributes['formatted-address'])}</span>
-                      <span className="text-sm opacity-70">{attributes['venue-name']}</span>
-                      {attributes.details && (
-                        <span className="text-xs opacity-60 italic">{attributes.details}</span>
-                      )}
-                    </div>
-                    
-                    <div>
-                      {attributes['is-sold-out'] ? (
-                        <span className="text-xs uppercase tracking-wider opacity-50">
-                          Sold Out
-                        </span>
-                      ) : (
-                        <Link 
-                          href="/tour" 
-                          className="text-xs uppercase tracking-wider hover:opacity-70 transition-opacity"
-                        >
-                          Tickets →
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="py-8 text-center opacity-50">
-              <p>No upcoming tour dates at this time.</p>
+      {isPageLoaded && (
+        <main className="flex-1 flex flex-col items-center justify-between py-24 md:py-36">
+          {/* Main title */}
+          {showHero && (
+            <div className="text-center mb-24 w-full relative">
+              <div className="absolute inset-0 bg-gradient-to-b  from-transparent to-background/10 -z-10"></div>
+              <div className="absolute inset-0 w-full h-full -z-20 opacity-30">
+              </div>
+              <h1 
+                ref={titleRef} 
+                className="main-title text-12xl md:text-14xl lg:text-16xl font-bold tracking-tighter relative"
+                style={{ fontSize: "clamp(8rem, 20vw, 18rem)" }}
+              >
+                <span>k</span>
+                <span>i</span>
+                <span>e</span>
+                <span>f</span>
+                <span>e</span>
+                <span>r</span>
+              </h1>
             </div>
           )}
-        </div>
-        
-        {/* About Section */}
-        <div className="w-full max-w-4xl mx-auto px-5 mt-24">
-          <div className="flex justify-between items-baseline mb-8">
-            <h2 className="text-xl font-medium tracking-tight">About Kiefer</h2>
-            <Link href="/about" className="text-xs uppercase tracking-wider opacity-70 hover:opacity-100 transition-opacity">
-              Learn More
-            </Link>
+          
+          {/* Dynamic Tour Section */}
+          <div className="w-full max-w-4xl mx-auto px-5 mt-24">
+            <div className="flex justify-between items-baseline mb-8">
+              <h2 className="text-xl font-medium tracking-tight text-gradient">Upcoming Tours</h2>
+              <Link href="/tour" className="text-xs uppercase tracking-wider opacity-70 hover:opacity-100 transition-opacity hover-underline">
+                View All
+              </Link>
+            </div>
+            
+            {isLoading ? (
+              <div className="py-8 text-center opacity-50">
+                <p>Loading tour dates...</p>
+              </div>
+            ) : error ? (
+              <div className="py-8 text-center opacity-50">
+                <p>Unable to load tour dates at this time.</p>
+              </div>
+            ) : tourData.length > 0 ? (
+              <div className="space-y-5">
+                {tourData.map((event) => {
+                  const attributes = event.attributes;
+                  return (
+                    <div 
+                      key={event.id}
+                      className="tour-item flex justify-between items-center border-b border-neutral-800/10 pb-4 card-hover p-3 subtle-border soft-glow rounded-sm"
+                    >
+                      <div className="flex space-x-6 items-baseline">
+                        <span className="text-sm font-space-mono opacity-60">
+                          {formatDate(attributes['starts-at-short'])}
+                        </span>
+                        <span className="text-lg font-space-mono">{extractLocation(attributes['formatted-address'])}</span>
+                        <span className="text-sm font-space-mono opacity-70">{attributes['venue-name']}</span>
+                        {attributes.details && (
+                          <span className="text-xs font-space-mono opacity-60 italic">{attributes.details}</span>
+                        )}
+                      </div>
+                      
+                      <div>
+                        {attributes['is-sold-out'] ? (
+                          <span className="text-xs font-space-mono uppercase tracking-wider opacity-50">
+                            Sold Out
+                          </span>
+                        ) : (
+                          <Link 
+                            href="/tour" 
+                            className="text-xs font-space-mono uppercase tracking-wider hover:opacity-70 transition-opacity glass-effect px-3 py-1 rounded-full"
+                          >
+                            Tickets →
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="py-8 text-center opacity-50">
+                <p className="font-space-mono">No upcoming tour dates at this time.</p>
+              </div>
+            )}
           </div>
           
-          <div className="flex flex-col md:flex-row gap-10 items-center">
-            <div className="md:w-1/2">
-              <p className="text-neutral-700 leading-relaxed">
-                Kiefer is a central figure in the diverse independent music scene of Los Angeles. 
-                His sound fuses various modalities of Black American Music, from jazz and R&B to 
-                hip-hop and electronic music.
-              </p>
+          {/* About Section */}
+          <div className="w-full max-w-4xl mx-auto px-5 mt-24">
+            <div className="flex justify-between items-baseline mb-8">
+              <h2 className="text-xl font-medium tracking-tight text-gradient">About Kiefer</h2>
+              <Link 
+                href="/about" 
+                className="text-xs font-space-mono uppercase tracking-wider opacity-70 hover:opacity-100 transition-opacity"
+              >
+                <span className="hover-underline">Learn More</span>
+              </Link>
+            </div>
+            
+            <div className="flex flex-col md:flex-row gap-10 items-center">
+              <div className="md:w-1/2">
+                <p className="font-space-mono leading-relaxed">
+                  Kiefer is a central figure in the diverse independent music scene of Los Angeles. 
+                  His sound fuses various modalities of Black American Music, from jazz and R&B to 
+                  hip-hop and electronic music.
+                </p>
+              </div>
+            </div>
+            
+            {/* Carousel */}
+            <div className="mt-8">
+              <Carousel 
+                images={[
+                  {
+                    src: "/kiefer.jpg",
+                    alt: "Kiefer in concert"
+                  },
+                  {
+                    src: "/kiefer1.jpg",
+                    alt: "Kiefer in concert"
+                  },
+                  {
+                    src: "/kiefer2.jpg",
+                    alt: "Kiefer in recording session"
+                  },
+                  {
+                    src: "/kiefer3.jpg",
+                    alt: "Kiefer in recording session"
+                  }
+                ]}
+              />
             </div>
           </div>
-          
-          {/* Replace the polaroid image with the carousel */}
-          <div className="mt-8">
-            <Carousel 
-              images={[
-                {
-                  src: "/kiefer.jpg",
-                  alt: "Kiefer in concert"
-                },
-                {
-                  src: "/kiefer1.jpg",
-                  alt: "Kiefer in concert"
-                },
-                {
-                  src: "/kiefer2.jpg",
-                  alt: "Kiefer in recording session"
-                },
-                {
-                  src: "/kiefer3.jpg",
-                  alt: "Kiefer in recording session"
-                }
-              ]}
-            />
+
+          {/* Courses Section */}
+          <div className="w-full max-w-4xl mx-auto px-5 mt-24 text-center">
+            <h2 className="text-xl font-medium mb-4">Vibes are off? Courses are the move</h2>
+            <p className="text-white font-space-mono leading-relaxed mb-6 max-w-2xl mx-auto">
+              Learn Kiefer&apos;s unique approach to music production, composition, and jazz piano through his online courses.
+            </p>
+            <a 
+              href="https://courses.kiefermusic.com/" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="inline-block font-space-mono uppercase text-sm tracking-wider border-b border-neutral-600 hover:border-white pb-1 transition-colors"
+            >
+              Explore Courses →
+            </a>
           </div>
-        </div>
-      </main>
+          
+          {/* Mailing List Section */}
+          <MailingListSignup />
+        </main>
+      )}
       
       <Footer />
+      
+      <style jsx global>{`
+        .main-title span {
+          display: inline-block;
+          cursor: pointer;
+          transition: transform 0.2s ease;
+          position: relative;
+          padding: 0.05em;
+        }
+
+        .main-title span:hover {
+          transform: scale(1.05);
+        }
+      `}</style>
     </div>
   );
 }
