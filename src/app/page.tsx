@@ -49,8 +49,24 @@ export default function Home() {
         // The tour events are in the "included" array
         const events = data.included || [];
         
+        // Get current date
+        const now = new Date();
+        
+        // Filter to get only future events, then sort by date
+        const futureEvents = events.filter(event => {
+          const eventDate = new Date(event.attributes['starts-at']);
+          return eventDate >= now;
+        });
+        
+        // Sort events by date
+        const sortedEvents = [...futureEvents].sort((a, b) => {
+          const dateA = new Date(a.attributes['starts-at']);
+          const dateB = new Date(b.attributes['starts-at']);
+          return dateA.getTime() - dateB.getTime();
+        });
+        
         // Take only the first 3 upcoming events
-        setTourData(events.slice(0, 3));
+        setTourData(sortedEvents.slice(0, 3));
         setIsLoading(false);
       } catch (err) {
         console.error('Error fetching tour data:', err);
@@ -92,46 +108,23 @@ export default function Home() {
     const images = [
       '/album1.jpeg',
       '/album2.jpeg',
-      '/album4.jpg',
       '/album3.jpg',
+      '/album4.jpg',
       '/album5.jpg',
       '/album6.jpg',
     ];
     
-    // Letter hover animations
-    const letters = document.querySelectorAll('.main-title span');
-    
-    letters.forEach((letter, index) => {
-      const letterEl = letter as HTMLElement;
+    // Apply background images to letters
+    setTimeout(() => {
+      const letters = document.querySelectorAll('.hover-letter');
       
-      // Apply background image and initial styles
-      letterEl.style.backgroundImage = `url(${images[index % images.length]})`;
-      letterEl.style.backgroundSize = 'cover';
-      letterEl.style.backgroundPosition = 'center';
-      letterEl.style.backgroundClip = 'text';
-      letterEl.style.webkitBackgroundClip = 'text';
-      letterEl.style.color = 'currentColor';
-      letterEl.style.webkitTextFillColor = 'currentColor';
-      
-      // Create hover animation for each letter
-      letterEl.addEventListener('mouseenter', () => {
-        gsap.to(letterEl, {
-          color: 'transparent',
-          webkitTextFillColor: 'transparent',
-          duration: 0.3,
-          ease: 'power2.out',
-        });
+      letters.forEach((letter, index) => {
+        const letterEl = letter as HTMLElement;
+        
+        // Set the background image directly
+        letterEl.style.backgroundImage = `url(${images[index % images.length]})`;
       });
-      
-      letterEl.addEventListener('mouseleave', () => {
-        gsap.to(letterEl, {
-          color: 'currentColor',
-          webkitTextFillColor: 'currentColor',
-          duration: 0.3,
-          ease: 'power2.out',
-        });
-      });
-    });
+    }, 100); // Small delay to ensure DOM is ready
     
     // Make sure to scroll to top on page load
     window.scrollTo(0, 0);
@@ -170,12 +163,12 @@ export default function Home() {
                 className="main-title text-12xl md:text-14xl lg:text-16xl font-bold tracking-tighter relative"
                 style={{ fontSize: "clamp(8rem, 20vw, 18rem)" }}
               >
-                <span>k</span>
-                <span>i</span>
-                <span>e</span>
-                <span>f</span>
-                <span>e</span>
-                <span>r</span>
+                <span className="hover-letter inline-block">k</span>
+                <span className="hover-letter inline-block">i</span>
+                <span className="hover-letter inline-block">e</span>
+                <span className="hover-letter inline-block">f</span>
+                <span className="hover-letter inline-block">e</span>
+                <span className="hover-letter inline-block">r</span>
               </h1>
             </div>
           )}

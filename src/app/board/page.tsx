@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, FormEvent, useRef } from 'react';
 import Image from 'next/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { motion } from 'framer-motion';
 
 // Define the interface for a note
 interface Note {
@@ -18,6 +19,9 @@ interface Note {
   createdAt: number;
 }
 
+// Post-it note Text Class for black text
+const postItTextClass = "text-black font-medium";
+
 export default function Board() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [name, setName] = useState('');
@@ -26,6 +30,14 @@ export default function Board() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const boardRef = useRef<HTMLDivElement>(null);
+  
+  // Track click vs drag - improved for more reliability
+  const interactionStartTime = useRef<number>(0);
+  const startPos = useRef<{ x: number, y: number } | null>(null);
+  const isDragging = useRef<boolean>(false);
+  const dragDistance = useRef<number>(0);
 
   // Load notes from localStorage on component mount
   useEffect(() => {
@@ -43,6 +55,11 @@ export default function Board() {
       localStorage.setItem('kieferBoardNotes', JSON.stringify([]));
     }
   }, []);
+
+  // Save notes to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('kieferBoardNotes', JSON.stringify(notes));
+  }, [notes]);
 
   // Generate a random color for the sticky note
   const getRandomColor = () => {
@@ -115,6 +132,83 @@ export default function Board() {
     }
   };
 
+  const handleDragEnd = (noteId: string, newPosition: { x: number; y: number }) => {
+    // Update the note's position in state
+    const updatedNotes = notes.map(note => {
+      if (note.id === noteId) {
+        return { ...note, position: newPosition };
+      }
+      return note;
+    });
+    
+    setNotes(updatedNotes);
+  };
+
+  const calculatePosition = (e: React.MouseEvent | MouseEvent | TouchEvent) => {
+    if (!boardRef.current) return;
+    
+    const boardRect = boardRef.current.getBoundingClientRect();
+    
+    // Get client coordinates (handle both mouse and touch events)
+    const clientX = 'clientX' in e ? e.clientX : ('touches' in e ? e.touches[0].clientX : 0);
+    const clientY = 'clientY' in e ? e.clientY : ('touches' in e ? e.touches[0].clientY : 0);
+    
+    const x = ((clientX - boardRect.left) / boardRect.width) * 100;
+    const y = ((clientY - boardRect.top) / boardRect.height) * 100;
+    
+    // Clamp values to keep notes within board boundaries
+    const clampedX = Math.max(5, Math.min(95, x));
+    const clampedY = Math.max(5, Math.min(95, y));
+    
+    return { x: clampedX, y: clampedY };
+  };
+
+  // Improved drag vs click detection
+  const handleDragStart = (e: MouseEvent | TouchEvent | PointerEvent) => {
+    interactionStartTime.current = Date.now();
+    isDragging.current = false;
+    dragDistance.current = 0;
+    
+    // Record start position for better drag detection
+    if ('clientX' in e && 'clientY' in e) {
+      startPos.current = { x: e.clientX, y: e.clientY };
+    } else if ('touches' in e && e.touches.length > 0) {
+      startPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+  };
+  
+  const handleDrag = (e: MouseEvent | TouchEvent | PointerEvent) => {
+    if (!startPos.current) return;
+    
+    let currentX = 0;
+    let currentY = 0;
+    
+    if ('clientX' in e && 'clientY' in e) {
+      currentX = e.clientX;
+      currentY = e.clientY;
+    } else if ('touches' in e && e.touches.length > 0) {
+      currentX = e.touches[0].clientX;
+      currentY = e.touches[0].clientY;
+    }
+    
+    // Calculate distance moved
+    const dx = currentX - startPos.current.x;
+    const dy = currentY - startPos.current.y;
+    dragDistance.current = Math.sqrt(dx*dx + dy*dy);
+    
+    // Consider dragging if moved more than 5px
+    if (dragDistance.current > 5) {
+      isDragging.current = true;
+    }
+  };
+  
+  const handleClick = (note: Note) => {
+    // Only consider a click if minimal movement occurred
+    if (!isDragging.current || dragDistance.current < 5) {
+      setSelectedNote(note);
+    }
+  };
+
   return (
     <>
       <Header />
@@ -125,9 +219,12 @@ export default function Board() {
             Leave a note for Kiefer and the community! Your message will appear as a sticky note on the board.
           </p>
           
-          {/* Cork Board */}
+          {/* Cork Board - Made larger with full width */}
           <div className="relative w-full flex justify-center mb-12">
-            <div className="relative w-full max-w-5xl aspect-[16/9] shadow-xl overflow-hidden">
+            <div 
+              ref={boardRef}
+              className="relative w-full max-w-4xl aspect-[16/10] shadow-xl overflow-hidden rounded-lg"
+            >
               <Image
                 src="/board.png"
                 alt="Cork Board"
@@ -142,26 +239,51 @@ export default function Board() {
               <div className="absolute bottom-4 left-4 w-6 h-6 bg-green-500 rounded-full shadow-md z-20"></div>
               <div className="absolute bottom-4 right-4 w-6 h-6 bg-yellow-500 rounded-full shadow-md z-20"></div>
               
-              {/* Sticky notes on the board */}
+              {/* Smaller, draggable sticky notes */}
               {notes.map((note) => (
-                <div
+                <motion.div
                   key={note.id}
-                  className={`absolute shadow-lg p-3 w-40 h-40 transform transition-transform hover:rotate-0 hover:z-30 hover:scale-110 ${note.color}`}
+                  className={`absolute shadow-lg p-2 w-28 h-28 cursor-move ${note.color}`}
                   style={{
                     left: `${note.position.x}%`,
                     top: `${note.position.y}%`,
                     transform: `translate(-50%, -50%) rotate(${Math.random() * 10 - 5}deg)`,
                     zIndex: 10,
                   }}
+                  drag
+                  dragConstraints={boardRef}
+                  dragElastic={0.1}
+                  dragMomentum={false}
+                  onDragStart={handleDragStart}
+                  onDrag={handleDrag}
+                  onDragEnd={(e) => {
+                    const newPosition = calculatePosition(e);
+                    if (newPosition) {
+                      handleDragEnd(note.id, newPosition);
+                    }
+                    // Reset after a short delay to allow click events
+                    setTimeout(() => {
+                      isDragging.current = false;
+                    }, 50);
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleClick(note);
+                  }}
+                  whileHover={{ 
+                    zIndex: 30, 
+                    scale: 1.05,
+                    boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
+                  }}
                 >
-                  <div className="h-full flex flex-col overflow-hidden font-mono text-sm">
-                    <p className="text-sm font-bold mb-1 border-b border-gray-300 pb-1">{note.name}</p>
-                    <p className="flex-1 overflow-auto">{note.message}</p>
-                    <p className="text-[10px] text-right mt-2 text-gray-500">
+                  <div className="h-full flex flex-col overflow-hidden font-mono text-xs">
+                    <p className={`text-xs font-bold mb-1 border-b border-gray-300 pb-1 truncate ${postItTextClass}`}>{note.name}</p>
+                    <p className={`flex-1 overflow-hidden line-clamp-4 text-[10px] ${postItTextClass}`}>{note.message}</p>
+                    <p className="text-[8px] text-right mt-1 text-gray-500">
                       {new Date(note.createdAt).toLocaleDateString()}
                     </p>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
@@ -193,7 +315,7 @@ export default function Board() {
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2 border border-amber-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50"
+                  className="w-full px-3 py-2 border border-amber-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50 text-black"
                   required
                 />
               </div>
@@ -207,7 +329,7 @@ export default function Board() {
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 border border-amber-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50"
+                  className="w-full px-3 py-2 border border-amber-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50 text-black"
                   required
                 />
                 <p className="text-xs text-gray-500 mt-1">
@@ -224,7 +346,7 @@ export default function Board() {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   rows={4}
-                  className="w-full px-3 py-2 border border-amber-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50"
+                  className="w-full px-3 py-2 border border-amber-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50 text-black"
                   required
                   maxLength={200}
                 ></textarea>
@@ -247,6 +369,40 @@ export default function Board() {
             </form>
           </div>
         </div>
+
+        {/* Improved Modal Implementation */}
+        {selectedNote && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            onClick={() => setSelectedNote(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", damping: 15 }}
+              className={`${selectedNote.color} p-6 rounded-lg shadow-2xl max-w-md w-full`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-xl font-bold text-black">{selectedNote.name}</h3>
+                <button 
+                  onClick={() => setSelectedNote(null)}
+                  className="text-gray-700 hover:text-gray-900"
+                  aria-label="Close modal"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-lg mb-4 whitespace-pre-wrap text-black">{selectedNote.message}</p>
+              <p className="text-sm text-gray-600 text-right">
+                {new Date(selectedNote.createdAt).toLocaleDateString()}
+              </p>
+            </motion.div>
+          </div>
+        )}
       </div>
       <Footer />
     </>

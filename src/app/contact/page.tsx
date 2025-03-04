@@ -45,49 +45,63 @@ export default function ContactPage() {
     
     // Simulate form submission
     setTimeout(() => {
-      setIsSubmitting(false);
-      setSubmitSuccess(true);
-      // Reset form data
-      setFormData({
-        name: '',
-        email: '',
-        subject: '',
-        message: '',
-      });
-      
-      // Hide success message after 5 seconds
-      setTimeout(() => {
+      // Simulate a successful submission most of the time
+      if (Math.random() > 0.1) {
+        setIsSubmitting(false);
+        setSubmitSuccess(true);
+        setSubmitError(false);
+        // Reset form data
+        setFormData({
+          name: '',
+          email: '',
+          subject: '',
+          message: '',
+        });
+        
+        // Hide success message after 5 seconds
+        setTimeout(() => {
+          setSubmitSuccess(false);
+        }, 5000);
+      } else {
+        // Simulate an error
+        setIsSubmitting(false);
         setSubmitSuccess(false);
-      }, 5000);
+        setSubmitError(true);
+        
+        // Hide error message after 5 seconds
+        setTimeout(() => {
+          setSubmitError(false);
+        }, 5000);
+      }
     }, 1500);
   };
   
   return (
     <>
       <Header />
-      <div className="pt-20 min-h-screen bg-amber-50">
+      <div className="pt-20 min-h-screen bg-slate-50">
         <div className="container mx-auto px-4 pb-12">
-          <h1 className="text-4xl font-bold mb-6 text-center text-stone-900">Contact</h1>
-          <p className="text-center text-lg mb-8 max-w-2xl mx-auto text-stone-800 font-medium">
+          <h1 className="text-4xl font-bold mb-6 text-center text-slate-800">Contact</h1>
+          <p className="text-center text-lg mb-8 max-w-2xl mx-auto text-slate-700 font-medium">
             Get in touch with Kiefer for bookings, press inquiries, or general questions.
           </p>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-5xl mx-auto">
             {/* Contact Information */}
             <div>
-              <h2 className="text-2xl font-semibold mb-6 text-stone-800">Contact Information</h2>
+              <h2 className="text-2xl font-semibold mb-6 text-slate-800">Contact Information</h2>
               
               <div className="space-y-6">
                 {contactInfo.map((info, i) => (
-                  <div key={i} className="bg-white p-6 rounded-lg shadow-md border border-amber-100">
-                    <h3 className="text-xl font-medium mb-2 text-amber-800">{info.title}</h3>
+                  <div key={i} className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                    <h3 className="text-xl font-medium mb-2 text-slate-700">{info.title}</h3>
                     <a 
                       href={`mailto:${info.email}`} 
-                      className="text-stone-800 font-medium hover:text-amber-600 transition-colors"
+                      className="text-slate-800 font-medium hover:text-blue-600 transition-colors"
                     >
                       {info.email}
                     </a>
-                    <p className="text-stone-600 mt-2">
+                    <p className="text-slate-600 mt-2">
                       {info.description}
                     </p>
                   </div>
@@ -95,8 +109,8 @@ export default function ContactPage() {
               </div>
               
               <div className="mt-12">
-                <h2 className="text-2xl font-semibold mb-6 text-stone-800">Social Media</h2>
-                <p className="text-stone-600 mb-6">
+                <h2 className="text-2xl font-semibold mb-6 text-slate-800">Social Media</h2>
+                <p className="text-slate-600 mb-6">
                   Follow Kiefer on social media for the latest updates, music releases, and tour announcements.
                 </p>
                 <div className="flex flex-wrap gap-4">
@@ -104,7 +118,7 @@ export default function ContactPage() {
                     href="https://instagram.com" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors shadow-sm"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
                   >
                     Instagram
                   </a>
@@ -112,7 +126,7 @@ export default function ContactPage() {
                     href="https://twitter.com" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors shadow-sm"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
                   >
                     Twitter
                   </a>
@@ -120,7 +134,7 @@ export default function ContactPage() {
                     href="https://facebook.com" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors shadow-sm"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
                   >
                     Facebook
                   </a>
@@ -130,12 +144,12 @@ export default function ContactPage() {
             
             {/* Contact Form */}
             <div>
-              <h2 className="text-2xl font-semibold mb-6 text-stone-800">Send a Message</h2>
+              <h2 className="text-2xl font-semibold mb-6 text-slate-800">Send a Message</h2>
               
               {submitSuccess ? (
                 <div className="bg-green-100 text-green-700 p-4 rounded-lg mb-6 shadow-sm">
                   <p className="font-medium">Thank you for your message!</p>
-                  <p>We'll get back to you as soon as possible.</p>
+                  <p>We&apos;ll get back to you as soon as possible.</p>
                 </div>
               ) : submitError ? (
                 <div className="bg-red-100 text-red-700 p-4 rounded-lg mb-6 shadow-sm">
@@ -144,9 +158,9 @@ export default function ContactPage() {
                 </div>
               ) : null}
               
-              <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-md border border-amber-100">
+              <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border border-slate-200">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-stone-700 mb-1">
+                  <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">
                     Name
                   </label>
                   <input
@@ -156,12 +170,12 @@ export default function ContactPage() {
                     value={formData.name}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 border border-amber-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50"
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                   />
                 </div>
                 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-stone-700 mb-1">
+                  <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
                     Email
                   </label>
                   <input
@@ -171,12 +185,12 @@ export default function ContactPage() {
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 border border-amber-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50"
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                   />
                 </div>
                 
                 <div>
-                  <label htmlFor="subject" className="block text-sm font-medium text-stone-700 mb-1">
+                  <label htmlFor="subject" className="block text-sm font-medium text-slate-700 mb-1">
                     Subject
                   </label>
                   <select
@@ -185,7 +199,7 @@ export default function ContactPage() {
                     value={formData.subject}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 border border-amber-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50"
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                   >
                     <option value="">Select a subject</option>
                     <option value="General Inquiry">General Inquiry</option>
@@ -197,7 +211,7 @@ export default function ContactPage() {
                 </div>
                 
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-stone-700 mb-1">
+                  <label htmlFor="message" className="block text-sm font-medium text-slate-700 mb-1">
                     Message
                   </label>
                   <textarea
@@ -207,7 +221,7 @@ export default function ContactPage() {
                     onChange={handleChange}
                     required
                     rows={6}
-                    className="w-full px-4 py-3 border border-amber-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50"
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                   />
                 </div>
                 
@@ -216,8 +230,8 @@ export default function ContactPage() {
                   disabled={isSubmitting}
                   className={`w-full py-3 rounded-lg font-medium shadow-sm transition-colors ${
                     isSubmitting 
-                      ? 'bg-gray-400 text-white cursor-not-allowed' 
-                      : 'bg-amber-600 text-white hover:bg-amber-700'
+                      ? 'bg-slate-400 text-white cursor-not-allowed' 
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
                   }`}
                 >
                   {isSubmitting ? 'Sending...' : 'Send Message'}

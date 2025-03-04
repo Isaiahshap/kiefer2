@@ -11,15 +11,15 @@ import PageLayout from '@/components/PageLayout';
 const albums = [
   {
     id: 1,
-    title: "It's Ok, B U",
-    year: "2023",
-    cover: "/album1.jpeg",
+    title: "Something For Real",
+    year: "2024",
+    cover: "/forreal.jpg",
     buyLink: "https://kiefer.bandcamp.com"
   },
   {
     id: 2,
-    title: "Between Days",
-    year: "2022",
+    title: "It's Ok, B U",
+    year: "2023",
     cover: "/album2.jpeg",
     buyLink: "https://kiefer.bandcamp.com"
   },
@@ -29,26 +29,26 @@ const albums = [
     year: "2021",
     cover: "/album3.jpg",
     buyLink: "https://kiefer.bandcamp.com"
-  },
+  }, 
   {
     id: 4,
-    title: "Bridges",
-    year: "2020",
-    cover: "/album4.jpg",
+    title: "Between Days",
+    year: "2021",
+    cover: "/album6.jpg",
     buyLink: "https://kiefer.bandcamp.com"
   },
   {
     id: 5,
     title: "Happysad",
     year: "2018",
-    cover: "/album5.jpg",
+    cover: "/happysad.jpg",
     buyLink: "https://kiefer.bandcamp.com"
   },
   {
     id: 6,
     title: "Kickinit Alone",
-    year: "2017",
-    cover: "/album6.jpg",
+    year: "2018",
+    cover: "/album1.jpeg",
     buyLink: "https://kiefer.bandcamp.com"
   }
 ];
@@ -220,10 +220,7 @@ export default function MusicPage() {
           
           {/* Call to action */}
           <div className="mt-16 p-8 bg-stone-100 rounded-md shadow-sm border border-stone-200 text-center">
-            <h2 className="text-2xl font-medium mb-4 text-stone-800">Listen to Kiefer's Complete Discography</h2>
-            <p className="text-stone-600 mb-6 font-space-mono max-w-2xl mx-auto">
-              Stream all of Kiefer's music on your favorite platform or purchase directly to support the artist.
-            </p>
+            <h2 className="text-2xl font-medium mb-4 text-stone-800">Listen to The Complete Discography</h2>
             <div className="flex flex-wrap justify-center gap-4">
               <Link 
                 href="https://open.spotify.com/artist/3v2Gh5cZQggKURNBXU68Yu"

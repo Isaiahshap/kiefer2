@@ -127,6 +127,13 @@ export default function TourPage() {
         return country === filter;
       });
   
+  // Sort tour dates chronologically
+  const sortedDates = [...filteredDates].sort((a, b) => {
+    const dateA = new Date(a.attributes['starts-at']);
+    const dateB = new Date(b.attributes['starts-at']);
+    return dateA.getTime() - dateB.getTime();
+  });
+  
   return (
     <PageLayout 
       title="Tour Dates"
@@ -251,8 +258,8 @@ export default function TourPage() {
               <div className="py-8 text-center opacity-50">
                 <p className="font-space-mono">Unable to load tour dates at this time.</p>
               </div>
-            ) : filteredDates.length > 0 ? (
-              filteredDates.map((event) => {
+            ) : sortedDates.length > 0 ? (
+              sortedDates.map((event) => {
                 const attributes = event.attributes;
                 return (
                   <div 
